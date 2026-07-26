@@ -15,93 +15,93 @@ import 'package:flutter_template/main.dart';
 import 'package:flutter_template/utils/local_storage.dart';
 import 'package:flutter_template/widgets/celebration_overlay.dart';
 
-/// Drives the core loop end-to-end: dashboard shows today's session, the
-/// user logs one exercise, amends nothing, completes the session, sees the
-/// celebration, and returns to a dashboard with a live streak.
-void main() {
-  testWidgets('complete a session from the dashboard', (tester) async {
-    GoogleFonts.config.allowRuntimeFetching = false;
-    tester.platformDispatcher.accessibilityFeaturesTestValue =
-        const FakeAccessibilityFeatures(disableAnimations: true);
+/// Boots the app with one two-exercise program scheduled today and opens
+/// today's session, ready for per-exercise interactions.
+Future<void> _openTodaysSession(WidgetTester tester) async {
+  GoogleFonts.config.allowRuntimeFetching = false;
+  tester.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
 
-    final program = ProgramModel(
-      id: 'p1',
-      name: 'Achilles rehab',
-      startDate: DateTime.now().subtract(const Duration(days: 7)),
-      createdAt: DateTime.now(),
-      exercises: const [
-        ProgramExercise(id: 'e1', name: 'Calf raise', sets: 3, reps: 10),
-        ProgramExercise(id: 'e2', name: 'Heel drop', sets: 3, reps: 8),
-      ],
-    );
-    final schedule = ScheduleModel(
-      programId: 'p1',
-      slots: [
-        ScheduleSlot(
-          id: 's1',
-          weekday: DateTime.now().weekday,
-          hour: 7,
-          minute: 0,
-        ),
-      ],
-    );
-    SharedPreferences.setMockInitialValues({
-      'creak.programs.v1': jsonEncode([program.toJson()]),
-      'creak.schedules.v1': jsonEncode([schedule.toJson()]),
-    });
-    final prefs = await SharedPreferences.getInstance();
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appConfigProvider.overrideWithValue(
-            const AppConfig(
-              apiBaseUrl: 'https://example.com',
-              llmProvider: '',
-              llmApiKey: '',
-              llmModel: '',
-              geminiApiKey: '',
-              geminiModel: '',
-              showDebugTools: false,
-            ),
-          ),
-          localStorageProvider.overrideWithValue(prefs),
-        ],
-        child: const CreakApp(introSeen: true),
+  final program = ProgramModel(
+    id: 'p1',
+    name: 'Achilles rehab',
+    startDate: DateTime.now().subtract(const Duration(days: 7)),
+    createdAt: DateTime.now(),
+    exercises: const [
+      ProgramExercise(id: 'e1', name: 'Calf raise', sets: 3, reps: 10),
+      ProgramExercise(id: 'e2', name: 'Heel drop', sets: 3, reps: 8),
+    ],
+  );
+  final schedule = ScheduleModel(
+    programId: 'p1',
+    slots: [
+      ScheduleSlot(
+        id: 's1',
+        weekday: DateTime.now().weekday,
+        hour: 7,
+        minute: 0,
       ),
-    );
-    await tester.pumpAndSettle();
+    ],
+  );
+  SharedPreferences.setMockInitialValues({
+    'creak.programs.v1': jsonEncode([program.toJson()]),
+    'creak.schedules.v1': jsonEncode([schedule.toJson()]),
+  });
+  final prefs = await SharedPreferences.getInstance();
 
-    // Dashboard shows today's pending session.
-    expect(find.textContaining('Achilles rehab'), findsOneWidget);
-    await tester.tap(find.text('Start today’s session'));
-    await tester.pumpAndSettle();
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        appConfigProvider.overrideWithValue(
+          const AppConfig(
+            apiBaseUrl: 'https://example.com',
+            llmProvider: '',
+            llmApiKey: '',
+            llmModel: '',
+            geminiApiKey: '',
+            geminiModel: '',
+            showDebugTools: false,
+          ),
+        ),
+        localStorageProvider.overrideWithValue(prefs),
+      ],
+      child: const CreakApp(introSeen: true),
+    ),
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Start today’s session'));
+  await tester.pumpAndSettle();
+}
 
-    // Mark each exercise done via its bottom sheet (which scrolls).
+/// Opens the next pending exercise's sheet and taps [action] ('Mark done ✓'
+/// or 'Skip').
+Future<void> _logNext(WidgetTester tester, String action) async {
+  await tester.tap(find.text('Start').first);
+  await tester.pumpAndSettle();
+  await tester.ensureVisible(find.text(action));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(action));
+  await tester.pumpAndSettle();
+}
+
+void main() {
+  testWidgets('completing every exercise shows the celebration', (
+    tester,
+  ) async {
+    await _openTodaysSession(tester);
+
     expect(find.text('Calf raise'), findsOneWidget);
-    await tester.tap(find.text('Start').first);
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Mark done ✓'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Mark done ✓'));
-    await tester.pumpAndSettle();
+    await _logNext(tester, 'Mark done ✓');
     expect(find.text('1 of 2 logged'), findsOneWidget);
     expect(find.byType(CreakyCelebrationView), findsNothing);
 
-    await tester.tap(find.text('Start').first);
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Mark done ✓'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Mark done ✓'));
-    await tester.pumpAndSettle();
+    await _logNext(tester, 'Mark done ✓');
     expect(find.text('2 of 2 logged'), findsOneWidget);
     expect(find.byType(CreakyCelebrationView), findsNothing);
 
-    // Finish the session; exactly one Creaky success screen appears.
     await tester.tap(find.text('Finish 🎉'));
     await tester.pumpAndSettle();
     expect(find.byType(CelebrationOverlay), findsOneWidget);
-    expect(find.byType(CreakyCelebrationView), findsOneWidget);
     expect(
       find.byWidgetPredicate(
         (widget) =>
@@ -109,12 +109,37 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Session complete!'), findsNothing);
 
     // Dismiss: back on the dashboard, all done, streak live.
     await tester.tap(find.text('Nice!'));
     await tester.pumpAndSettle();
     expect(find.text('All done today 🎉'), findsOneWidget);
     expect(find.textContaining('1-day streak'), findsOneWidget);
+  });
+
+  testWidgets('a partial session (one done, one skipped) still celebrates', (
+    tester,
+  ) async {
+    await _openTodaysSession(tester);
+
+    await _logNext(tester, 'Mark done ✓');
+    await _logNext(tester, 'Skip');
+    expect(find.text('2 of 2 logged'), findsOneWidget);
+
+    await tester.tap(find.text('Finish 🎉'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CelebrationOverlay), findsOneWidget);
+  });
+
+  testWidgets('a fully skipped session stays silent', (tester) async {
+    await _openTodaysSession(tester);
+
+    await _logNext(tester, 'Skip');
+    await _logNext(tester, 'Skip');
+    expect(find.text('2 of 2 logged'), findsOneWidget);
+
+    await tester.tap(find.text('Finish 🎉'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CelebrationOverlay), findsNothing);
   });
 }

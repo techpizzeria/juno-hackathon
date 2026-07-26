@@ -80,9 +80,12 @@ class _TodayLogScreenState extends ConsumerState<TodayLogScreen> {
     try {
       await ref.read(logsProvider.notifier).markSessionComplete(_entryId!);
       if (!mounted) return;
-      final successful =
-          sessionOutcome(program: program, entry: entry, isPast: false) ==
-          SessionOutcome.completed;
+      final outcome =
+          sessionOutcome(program: program, entry: entry, isPast: false);
+      // Celebrate any real effort: a full session or at least one exercise
+      // done. Only a fully skipped session stays silent.
+      final successful = outcome == SessionOutcome.completed ||
+          outcome == SessionOutcome.partial;
       if (successful) {
         final celebration = creakyCelebrationSelector.next();
         final message = creakyEncouragementSelector.next();
