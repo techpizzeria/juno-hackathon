@@ -52,14 +52,22 @@ List<SessionView> _sessionsOn(
   required List<ScheduleModel> schedules,
   required List<LogEntryModel> logs,
   required bool isPast,
+  bool includeUnscheduledActive = false,
 }) {
   final key = ymd(day);
   final views = <SessionView>[];
   for (final program in programs) {
     final schedule =
         schedules.where((s) => s.programId == program.id).firstOrNull;
-    if (!isScheduledOn(program, schedule, day)) continue;
-    final slots = schedule!.slots
+    // A program is trainable on any day it is active; reminders only decide
+    // whether a notification fires and whether the day counts toward the
+    // streak. So today includes active programs even without a schedule,
+    // while history stays limited to genuinely scheduled days.
+    final include = includeUnscheduledActive
+        ? program.isActiveOn(day)
+        : isScheduledOn(program, schedule, day);
+    if (!include) continue;
+    final slots = (schedule?.slots ?? const <ScheduleSlot>[])
         .where((slot) => slot.weekday == day.weekday)
         .toList()
       ..sort((a, b) => (a.hour * 60 + a.minute) - (b.hour * 60 + b.minute));
@@ -79,7 +87,8 @@ List<SessionView> _sessionsOn(
   return views;
 }
 
-/// Today's scheduled sessions, pending first.
+/// Today's trainable sessions (every program active today, reminders or
+/// not), pending first.
 @Riverpod(keepAlive: true)
 List<SessionView> todaysSessions(Ref ref) {
   final sessions = _sessionsOn(
@@ -88,6 +97,7 @@ List<SessionView> todaysSessions(Ref ref) {
     schedules: ref.watch(schedulesProvider),
     logs: ref.watch(logsProvider),
     isPast: false,
+    includeUnscheduledActive: true,
   )..sort((a, b) {
       int rank(SessionOutcome o) => o == SessionOutcome.pending ? 0 : 1;
       return rank(a.outcome) - rank(b.outcome);

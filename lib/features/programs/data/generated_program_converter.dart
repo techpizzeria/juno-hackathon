@@ -5,9 +5,10 @@ import 'package:flutter_template/utils/ids.dart';
 
 /// Converts an LLM-generated program into a storable [ProgramModel].
 ///
-/// Pure: mints fresh ids, clamps prescriptions to sane ranges, defaults the
-/// date range to six weeks from today, and resolves catalog links the model
-/// may have fudged (exact id → normalized name → contains → free text).
+/// Pure: mints fresh ids, clamps prescriptions to sane ranges, runs the
+/// program from today for the model's chosen number of weeks (clamped 2–12),
+/// and resolves catalog links the model may have fudged (exact id →
+/// normalized name → contains → free text).
 ProgramModel convertGeneratedProgram(
   GeneratedProgramModel generated,
   List<ExerciseModel> catalog, {
@@ -15,12 +16,13 @@ ProgramModel convertGeneratedProgram(
 }) {
   final now = today ?? DateTime.now();
   final start = DateTime(now.year, now.month, now.day);
+  final weeks = generated.durationWeeks.clamp(2, 12);
   return ProgramModel(
     id: newId(),
     name: generated.name.trim().isEmpty ? 'My program' : generated.name.trim(),
     description: generated.summary,
     startDate: start,
-    endDate: start.add(const Duration(days: 42)),
+    endDate: start.add(Duration(days: weeks * 7)),
     createdAt: now,
     exercises: [
       for (final exercise in generated.exercises)

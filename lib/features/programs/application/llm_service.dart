@@ -59,6 +59,7 @@ const Map<String, dynamic> programJsonSchema = {
     'name',
     'summary',
     'disclaimer',
+    'durationWeeks',
     'exercises',
     'suggestedSchedule',
   ],
@@ -66,6 +67,7 @@ const Map<String, dynamic> programJsonSchema = {
     'name': {'type': 'string'},
     'summary': {'type': 'string'},
     'disclaimer': {'type': 'string'},
+    'durationWeeks': {'type': 'integer'},
     'exercises': {
       'type': 'array',
       'items': {
@@ -108,7 +110,7 @@ const Map<String, dynamic> programJsonSchema = {
 };
 
 String _chatSystemPrompt() =>
-    'You are Creak, a warm, encouraging physiotherapy assistant helping the '
+    'You are Creaky, a warm, encouraging physiotherapy assistant helping the '
     'user shape a home exercise program through a short chat. Ask one or two '
     'brief questions at a time (what hurts, how long, how severe, their goal) '
     'to understand their situation. Keep every reply to one to three friendly '
@@ -127,14 +129,34 @@ String _systemPrompt() =>
     'catalogExerciseId to its exact id, otherwise set it to null and give a '
     'clear name plus a one-line description. Never diagnose. Include a short '
     'disclaimer advising to see a professional for persistent pain. '
+    'Choose a sensible program length in whole weeks for the condition '
+    '(typically 4 to 8) and return it as durationWeeks. '
     'weekdays use 1=Monday..7=Sunday.';
 
 String _userPrompt(String problem, List<ExerciseModel> catalog) {
-  final lines = catalog
-      .map((e) => '${e.id} | ${e.name} | ${e.primaryMuscles.join(",")} | '
-          '${e.level}')
-      .join('\n');
-  return 'Complaint: $problem\n\nCATALOG:\n$lines';
+  final lines = catalog.map(_catalogLine).join('\n');
+  return 'Complaint: $problem\n\n'
+      'CATALOG (prefer these; copy the exact id into catalogExerciseId):\n'
+      '$lines';
+}
+
+/// One catalog line for the prompt, rich enough for the model to pick well:
+/// primary muscles, equipment, difficulty, and the first how-to step.
+String _catalogLine(ExerciseModel e) {
+  final muscles = e.primaryMuscles.isEmpty ? 'n/a' : e.primaryMuscles.join(', ');
+  final equipment =
+      (e.equipment == null || e.equipment!.isEmpty) ? 'none' : e.equipment!;
+  final how = e.instructions.isEmpty
+      ? ''
+      : ' | how: ${_truncate(e.instructions.first, 140)}';
+  return '${e.id} | ${e.name} | muscles: $muscles | equipment: $equipment '
+      '| level: ${e.level}$how';
+}
+
+/// Collapses whitespace and caps [text] at [max] characters.
+String _truncate(String text, int max) {
+  final clean = text.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return clean.length <= max ? clean : '${clean.substring(0, max)}…';
 }
 
 GeneratedProgramModel _parse(String jsonText) {

@@ -1,10 +1,13 @@
-.PHONY: help setup run test analyze format lint build-runner clean
+.PHONY: help setup env run test analyze format lint build-runner clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-13s\033[0m %s\n", $$1, $$2}'
 
-setup: ## Fetch Dart/Flutter packages
+setup: env ## Create .env and fetch Dart/Flutter packages
 	flutter pub get
+
+env: ## Create .env from .env.example if missing (add your LLM key there)
+	@cp -n .env.example .env 2>/dev/null || true
 
 run: ## Run on a connected device / emulator
 	flutter run

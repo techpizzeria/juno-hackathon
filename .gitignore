@@ -1,3 +1,6 @@
+# Local secrets: real LLM key lives here, committed as .env.example instead.
+.env
+
 # Miscellaneous
 *.class
 *.log

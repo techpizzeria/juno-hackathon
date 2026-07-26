@@ -23,6 +23,7 @@ class GeneratedProgramModel {
     required this.name,
     required this.summary,
     required this.disclaimer,
+    required this.durationWeeks,
     required this.exercises,
     required this.suggestedSchedule,
   });
@@ -39,6 +40,10 @@ class GeneratedProgramModel {
 
   /// See-a-professional note shown to the user.
   final String disclaimer;
+
+  /// How many weeks the program should run, chosen to fit the condition.
+  /// The converter clamps this and derives the program's end date from it.
+  final int durationWeeks;
 
   /// The proposed exercises.
   final List<GeneratedExerciseModel> exercises;

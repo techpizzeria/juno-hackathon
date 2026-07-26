@@ -12,6 +12,7 @@ GeneratedProgramModel _$GeneratedProgramModelFromJson(
   name: json['name'] as String,
   summary: json['summary'] as String,
   disclaimer: json['disclaimer'] as String,
+  durationWeeks: (json['durationWeeks'] as num).toInt(),
   exercises: (json['exercises'] as List<dynamic>)
       .map((e) => GeneratedExerciseModel.fromJson(e as Map<String, dynamic>))
       .toList(),

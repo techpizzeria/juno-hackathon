@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_template/features/exercise_catalog/data/exercise_catalog.dart';
 import 'package:flutter_template/features/programs/application/llm_service.dart';
 import 'package:flutter_template/features/programs/data/generated_program_converter.dart';
+import 'package:flutter_template/features/programs/domain/catalog_shortlist.dart';
 import 'package:flutter_template/features/programs/domain/chat_message.dart';
 import 'package:flutter_template/features/programs/domain/generated_program.dart';
 import 'package:flutter_template/features/programs/presentation/program_edit_screen.dart';
@@ -17,7 +18,7 @@ import 'package:flutter_template/widgets/mascot.dart';
 
 /// Conversational AI program creation.
 ///
-/// The user chats with Creak about what hurts; once there's enough context
+/// The user chats with Creaky about what hurts; once there's enough context
 /// they tap "Build my program", which turns the conversation into an editable
 /// plan. Nothing is saved until the user commits in the editor.
 class AiChatScreen extends ConsumerStatefulWidget {
@@ -37,7 +38,7 @@ class AiChatScreen extends ConsumerStatefulWidget {
 
 class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   static const _greeting =
-      "Hi, I'm Creak 🦴 Tell me what's bothering you — what hurts, "
+      "Hi, I'm Creaky ☁️ Tell me what's bothering you — what hurts, "
       'and when does it act up?';
 
   final _input = TextEditingController();
@@ -109,11 +110,15 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     try {
       final catalog = await ref.read(exerciseCatalogProvider.future);
       final transcript = _messages
-          .map((m) => '${m.fromUser ? 'User' : 'Creak'}: ${m.text}')
+          .map((m) => '${m.fromUser ? 'User' : 'Creaky'}: ${m.text}')
           .join('\n');
+      // Send only the exercises relevant to the complaint so the model picks
+      // from a focused set; the converter still resolves against the full
+      // catalog.
+      final shortlist = shortlistForComplaint(transcript, catalog);
       final generated = await service.generateProgram(
         problemDescription: transcript,
-        catalog: catalog,
+        catalog: shortlist,
       );
       if (!mounted) return;
       setState(() => _proposal = generated);
@@ -151,7 +156,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   Widget build(BuildContext context) {
     final proposal = _proposal;
     return AppScaffold(
-      title: 'Create with Creak ✨',
+      title: 'Create with Creaky ✨',
       body: Column(
         children: [
           Expanded(
@@ -258,7 +263,7 @@ class _ChatBubble extends StatelessWidget {
   }
 }
 
-/// Three-dot "Creak is typing" indicator.
+/// Three-dot "Creaky is typing" indicator.
 class _TypingIndicator extends StatelessWidget {
   const _TypingIndicator();
 
@@ -274,7 +279,7 @@ class _TypingIndicator extends StatelessWidget {
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Text('Creak is thinking…', style: theme.textTheme.bodyMedium),
+        child: Text('Creaky is thinking…', style: theme.textTheme.bodyMedium),
       ),
     );
   }
@@ -294,6 +299,10 @@ class _ProposalCard extends StatelessWidget {
     final days = schedule.weekdays.map(weekdayShortLabel).join(', ');
     final time = '${schedule.hour.toString().padLeft(2, '0')}:'
         '${schedule.minute.toString().padLeft(2, '0')}';
+    // Mirror the converter: the plan runs from today for the chosen weeks.
+    final weeks = proposal.durationWeeks.clamp(2, 12);
+    final start = DateTime.now();
+    final end = start.add(Duration(days: weeks * 7));
     return AppAnimate(
       effects: AppAnimations.cardEntrance,
       child: Card(
@@ -320,6 +329,12 @@ class _ProposalCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(proposal.summary, style: theme.textTheme.bodyMedium),
+              const SizedBox(height: 8),
+              Text(
+                '📅 $weeks-week plan · '
+                '${monthDayLabel(start)} → ${monthDayLabel(end)}',
+                style: theme.textTheme.bodyMedium,
+              ),
               const SizedBox(height: 12),
               for (final exercise in proposal.exercises)
                 Padding(

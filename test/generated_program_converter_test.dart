@@ -27,6 +27,7 @@ const _cannedResponse = '''
   "name": "Achilles comeback plan",
   "summary": "Gentle loading for the achilles tendon.",
   "disclaimer": "See a physio if pain persists.",
+  "durationWeeks": 6,
   "exercises": [
     {"name": "Calf Raise On A Dumbbell", "catalogExerciseId": "Calf_Raise_On_A_Dumbbell", "sets": 3, "reps": 12, "description": null},
     {"name": "calf raise on a dumbbell", "catalogExerciseId": "Calf_Raise_Dumbbell_WRONG", "sets": 30, "reps": 100, "description": "slow tempo"},
@@ -70,6 +71,37 @@ void main() {
     expect(
       program.exercises.map((e) => e.id).toSet(),
       hasLength(3),
+    );
+  });
+
+  test('durationWeeks drives the end date and is clamped to 2-12', () {
+    GeneratedProgramModel plan(int weeks) => GeneratedProgramModel(
+          name: 'Plan',
+          summary: 'summary',
+          disclaimer: 'see a physio',
+          durationWeeks: weeks,
+          exercises: const [],
+          suggestedSchedule: const GeneratedScheduleModel(
+            weekdays: [1],
+            hour: 9,
+            minute: 0,
+          ),
+        );
+    final today = DateTime(2026, 3, 10);
+
+    // In-range weeks are honored.
+    expect(
+      convertGeneratedProgram(plan(3), const [], today: today).endDate,
+      today.add(const Duration(days: 21)),
+    );
+    // Too long clamps to 12 weeks, too short to 2.
+    expect(
+      convertGeneratedProgram(plan(100), const [], today: today).endDate,
+      today.add(const Duration(days: 84)),
+    );
+    expect(
+      convertGeneratedProgram(plan(0), const [], today: today).endDate,
+      today.add(const Duration(days: 14)),
     );
   });
 

@@ -1,3 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// Immutable runtime configuration for the app.
 ///
 /// Holds environment-dependent values (API base URL, timeouts). Resolved once
@@ -37,22 +39,34 @@ class AppConfig {
 
   /// Builds the config for the current build.
   ///
-  /// Values can be overridden at build time with `--dart-define`, e.g.
-  /// `flutter run --dart-define=LLM_PROVIDER=anthropic \
-  ///  --dart-define=LLM_API_KEY=sk-...`.
+  /// LLM values come from the loaded `.env` file first (see
+  /// `dotenv.load` in `main.dart`), falling back to `--dart-define` when the
+  /// `.env` has no non-empty entry. So both of these work:
+  /// `LLM_API_KEY=sk-...` in `.env`, or
+  /// `flutter run --dart-define=LLM_API_KEY=sk-...`.
   factory AppConfig.resolve() {
-    return const AppConfig(
-      apiBaseUrl: String.fromEnvironment(
+    return AppConfig(
+      apiBaseUrl: const String.fromEnvironment(
         'API_BASE_URL',
         defaultValue: 'https://catfact.ninja',
       ),
-      llmProvider: String.fromEnvironment(
+      llmProvider: _envOr(
         'LLM_PROVIDER',
-        defaultValue: 'openai',
+        const String.fromEnvironment('LLM_PROVIDER', defaultValue: 'openai'),
       ),
-      llmApiKey: String.fromEnvironment('LLM_API_KEY'),
-      llmModel: String.fromEnvironment('LLM_MODEL'),
-      showDebugTools: bool.fromEnvironment('SHOW_DEBUG_TOOLS'),
+      llmApiKey: _envOr(
+        'LLM_API_KEY',
+        const String.fromEnvironment('LLM_API_KEY'),
+      ),
+      llmModel: _envOr('LLM_MODEL', const String.fromEnvironment('LLM_MODEL')),
+      showDebugTools: const bool.fromEnvironment('SHOW_DEBUG_TOOLS'),
     );
   }
+}
+
+/// Reads [key] from the loaded `.env`, or returns [dartDefine] when the
+/// file is absent, unloaded, or the entry is blank.
+String _envOr(String key, String dartDefine) {
+  final value = dotenv.isInitialized ? dotenv.maybeGet(key) : null;
+  return (value != null && value.isNotEmpty) ? value : dartDefine;
 }

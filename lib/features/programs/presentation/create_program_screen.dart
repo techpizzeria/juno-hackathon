@@ -11,7 +11,7 @@ import 'package:flutter_template/widgets/app_animations.dart';
 import 'package:flutter_template/widgets/app_scaffold.dart';
 import 'package:flutter_template/widgets/mascot.dart';
 
-/// Entry fork for adding a program: bring your own, or let Creak help.
+/// Entry fork for adding a program: bring your own, or let Creaky help.
 ///
 /// Routes to the manual editor or the AI chat. The AI option is disabled
 /// when no LLM is configured; manual creation always works.
@@ -64,7 +64,7 @@ class CreateProgramScreen extends ConsumerWidget {
                 icon: Icons.auto_awesome,
                 title: 'Help me build one',
                 subtitle: aiEnabled
-                    ? 'Chat with Creak about what hurts and get a plan.'
+                    ? 'Chat with Creaky about what hurts and get a plan.'
                     : 'Add an API key to enable AI creation.',
                 enabled: aiEnabled,
                 onTap: () => _launch(context, const AiChatScreen()),

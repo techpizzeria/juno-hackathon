@@ -23,3 +23,8 @@ bool isSameDay(DateTime a, DateTime b) =>
 /// Short label for a 1=Monday..7=Sunday weekday index.
 String weekdayShortLabel(int weekday) =>
     const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][weekday - 1];
+
+/// Friendly month-and-day label, e.g. `Jul 26`.
+String monthDayLabel(DateTime date) => _monthDayFormat.format(date);
+
+final DateFormat _monthDayFormat = DateFormat.MMMd();
