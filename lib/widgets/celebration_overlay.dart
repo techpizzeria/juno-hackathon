@@ -11,8 +11,8 @@ import 'package:flutter_template/widgets/mascot.dart';
 
 /// Session-lifetime selector for the supplied Creaky celebrations.
 ///
-/// The first selection is uniform across all three values. Later selections
-/// are uniform across the two values other than the immediately previous one.
+/// The first selection is always the heart-eyes cloud. Later selections are
+/// uniform across the two values other than the immediately previous one.
 class CreakyCelebrationSelector {
   /// Creates a selector, optionally with a deterministic [random] for tests.
   CreakyCelebrationSelector({Random? random}) : _random = random ?? Random();
@@ -20,12 +20,19 @@ class CreakyCelebrationSelector {
   final Random _random;
   CreakyCelebration? _last;
 
-  /// Selects the next valid celebration without an immediate repeat.
+  /// Selects the next celebration. Leads with [CreakyCelebration.heartEyes],
+  /// then varies without an immediate repeat.
   CreakyCelebration next() {
-    final available = CreakyCelebration.values
-        .where((celebration) => celebration != _last)
-        .toList(growable: false);
-    final selected = available[_random.nextInt(available.length)];
+    final last = _last;
+    final CreakyCelebration selected;
+    if (last == null) {
+      selected = CreakyCelebration.heartEyes;
+    } else {
+      final available = CreakyCelebration.values
+          .where((celebration) => celebration != last)
+          .toList(growable: false);
+      selected = available[_random.nextInt(available.length)];
+    }
     _last = selected;
     return selected;
   }

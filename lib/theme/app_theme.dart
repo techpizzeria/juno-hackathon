@@ -70,7 +70,9 @@ abstract final class AppTheme {
     return _base(scheme).copyWith(
       extensions: const [
         CreakColors(
-          backgroundGradient: [Color(0xFFFFD9C0), Color(0xFFFFB58A)],
+          // Fades from a soft cream at the top (so the peach mascot stands
+          // out against it) down to a warm peach.
+          backgroundGradient: [Color(0xFFFFF1E6), Color(0xFFFFC7A3)],
           success: Color(0xFF3E8E5A),
           streakFlame: Color(0xFFFF6B35),
         ),

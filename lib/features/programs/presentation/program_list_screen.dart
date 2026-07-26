@@ -125,48 +125,58 @@ class _EmptyPrograms extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'No programs yet',
-                  style: theme.textTheme.headlineSmall,
-                  textAlign: TextAlign.center,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Tall enough to run from the centred text up toward the "+".
+        final arrowHeight =
+            (constraints.maxHeight * 0.42).clamp(180.0, 280.0);
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'No programs yet',
+                      style: theme.textTheme.headlineSmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Create your first program to get started.',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Create your first program to get started.',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-        // Doodle arrow just under the app bar, its tip aimed at the "+".
-        Positioned(
-          top: 0,
-          right: 8,
-          child: IgnorePointer(
-            child: SvgPicture.asset(
-              'assets/doodles/arrow_add.svg',
-              width: 110,
-              colorFilter: ColorFilter.mode(
-                theme.colorScheme.primary,
-                BlendMode.srcIn,
               ),
             ),
-          ),
-        ),
-      ],
+            // Doodle arrow: tail near the centred text, head aimed up at the
+            // "+" in the app bar (it points toward it without reaching it).
+            Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4, right: 8),
+                child: IgnorePointer(
+                  child: SvgPicture.asset(
+                    'assets/doodles/arrow_add.svg',
+                    height: arrowHeight,
+                    colorFilter: ColorFilter.mode(
+                      theme.colorScheme.primary,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

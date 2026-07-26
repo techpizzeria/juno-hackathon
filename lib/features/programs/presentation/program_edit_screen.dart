@@ -72,9 +72,7 @@ class _ProgramEditScreenState extends ConsumerState<ProgramEditScreen> {
   /// draft not yet saved), which drives the "then set reminders" flow.
   bool get _isNew =>
       widget.initial == null ||
-      !ref
-          .read(programsProvider)
-          .any((p) => p.id == widget.initial!.id);
+      !ref.read(programsProvider).any((p) => p.id == widget.initial!.id);
 
   bool get _advanceToReminders => widget.advanceToReminders ?? _isNew;
 
@@ -150,8 +148,9 @@ class _ProgramEditScreenState extends ConsumerState<ProgramEditScreen> {
     final base = widget.initial;
     // Guard against an end date that predates the start (e.g. after the
     // start was moved later): drop it rather than store an invalid range.
-    final endDate =
-        _endDate != null && _endDate!.isBefore(_startDate) ? null : _endDate;
+    final endDate = _endDate != null && _endDate!.isBefore(_startDate)
+        ? null
+        : _endDate;
     final program = ProgramModel(
       id: base?.id ?? newId(),
       name: _name.text.trim(),
@@ -223,7 +222,7 @@ class _ProgramEditScreenState extends ConsumerState<ProgramEditScreen> {
                                   setState(() => _startDate = date),
                             ),
                             DateField(
-                              placeholder: 'End date (optional)',
+                              placeholder: 'End date',
                               value: _endDate,
                               firstDate: _startDate,
                               onChanged: (date) =>
@@ -331,9 +330,7 @@ class _ExerciseTile extends StatelessWidget {
 /// What an [_ExerciseEditSheet] resolves to: a saved exercise or a deletion.
 class _ExerciseSheetResult {
   const _ExerciseSheetResult.saved(this.exercise) : deleted = false;
-  const _ExerciseSheetResult.deleted()
-      : exercise = null,
-        deleted = true;
+  const _ExerciseSheetResult.deleted() : exercise = null, deleted = true;
 
   final ProgramExercise? exercise;
   final bool deleted;
@@ -432,66 +429,70 @@ class _ExerciseEditSheetState extends State<_ExerciseEditSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextField(
-            controller: _name,
-            decoration: InputDecoration(
-              hintText: 'Exercise name',
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              suffixIcon: IconButton(
-                tooltip: 'Pick from catalog',
-                icon: const Icon(Icons.grid_view),
-                onPressed: _pickFromCatalog,
+              controller: _name,
+              decoration: InputDecoration(
+                hintText: 'Exercise name',
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                suffixIcon: IconButton(
+                  tooltip: 'Pick from catalog',
+                  icon: const Icon(Icons.grid_view),
+                  onPressed: _pickFromCatalog,
+                ),
               ),
+              textCapitalization: TextCapitalization.sentences,
+              onChanged: (_) => setState(() {}),
             ),
-            textCapitalization: TextCapitalization.sentences,
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 12),
-          FormFieldRow(
-            children: [
-              NumberStepper(
-                label: 'Sets',
-                value: _sets,
-                max: 10,
-                onChanged: (value) => setState(() => _sets = value),
+            const SizedBox(height: 12),
+            FormFieldRow(
+              children: [
+                NumberStepper(
+                  label: 'Sets',
+                  value: _sets,
+                  max: 10,
+                  onChanged: (value) => setState(() => _sets = value),
+                ),
+                NumberStepper(
+                  label: 'Reps',
+                  value: _reps,
+                  onChanged: (value) => setState(() => _reps = value),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _referenceUrl,
+              decoration: const InputDecoration(
+                hintText: 'Reference link (optional)',
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
               ),
-              NumberStepper(
-                label: 'Reps',
-                value: _reps,
-                onChanged: (value) => setState(() => _reps = value),
+              keyboardType: TextInputType.url,
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: _name.text.trim().isEmpty ? null : _submit,
+              child: Text(_isEditing ? 'Update' : 'Add'),
+            ),
+            if (_isEditing) ...[
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: _delete,
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                label: Text(
+                  'Delete exercise',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ),
             ],
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _referenceUrl,
-            decoration: const InputDecoration(
-              hintText: 'Reference link (optional)',
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            ),
-            keyboardType: TextInputType.url,
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _name.text.trim().isEmpty ? null : _submit,
-            child: Text(_isEditing ? 'Update' : 'Add'),
-          ),
-          if (_isEditing) ...[
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: _delete,
-              icon: Icon(
-                Icons.delete_outline,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              label: Text(
-                'Delete exercise',
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ),
           ],
-        ],
         ),
       ),
     );

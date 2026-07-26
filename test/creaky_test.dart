@@ -239,6 +239,14 @@ void main() {
   });
 
   group('Creaky celebration selection', () {
+    test('leads with the heart-eyes cloud', () {
+      // Independent of the RNG seed, the first celebration is heart eyes.
+      for (final seed in [1, 42, 99, 1000]) {
+        final selector = CreakyCelebrationSelector(random: Random(seed));
+        expect(selector.next(), CreakyCelebration.heartEyes);
+      }
+    });
+
     test('returns only valid values and avoids immediate repeats', () {
       final selector = CreakyCelebrationSelector(random: Random(42));
       CreakyCelebration? previous;
