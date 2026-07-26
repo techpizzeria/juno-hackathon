@@ -109,7 +109,7 @@ final class LogsProvider extends $NotifierProvider<Logs, List<LogEntryModel>> {
   }
 }
 
-String _$logsHash() => r'7d98ea457dbb3fb1bc40ec59224ddffba0b136af';
+String _$logsHash() => r'9853a203a12213d66aae0e58ccc2d29fc9a1e9ec';
 
 /// Reactive session logs; the UI's entry point for logging mutations.
 

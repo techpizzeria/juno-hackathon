@@ -1,5 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import 'package:flutter_template/features/logs/domain/form_feedback.dart';
+
 part 'log_entry.g.dart';
 
 /// A one-shot domain event emitted when an exercise transitions to fully done.
@@ -55,7 +57,7 @@ enum ExerciseLogStatus {
 /// performed (e.g. `[10, 10, 7]` against a 3×10 prescription). Null when the
 /// exercise was skipped or logged without detail. Pending exercises have no
 /// log at all.
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class ExerciseLogModel {
   const ExerciseLogModel({
     required this.exerciseId,
@@ -63,6 +65,7 @@ class ExerciseLogModel {
     this.repsPerSet,
     this.painNote,
     this.videoPath,
+    this.feedback,
   });
 
   /// Decodes from stored JSON.
@@ -85,6 +88,9 @@ class ExerciseLogModel {
   /// Absolute path to a self-recorded form-check video, when one was taken.
   final String? videoPath;
 
+  /// AI feedback on [videoPath], when the user ran a form check.
+  final FormFeedbackModel? feedback;
+
   /// Whether this exercise was fully completed: marked done with no set left
   /// at 0 reps. A done log with a 0-rep set counts as partial, not complete.
   bool get isFullyDone =>
@@ -99,12 +105,15 @@ class ExerciseLogModel {
   /// Encodes to stored JSON.
   Map<String, dynamic> toJson() => _$ExerciseLogModelToJson(this);
 
-  /// Copy with selective overrides.
+  /// Copy with selective overrides. Pass [clearFeedback] to drop feedback
+  /// (e.g. after the video is retaken).
   ExerciseLogModel copyWith({
     ExerciseLogStatus? status,
     List<int>? repsPerSet,
     String? painNote,
     String? videoPath,
+    FormFeedbackModel? feedback,
+    bool clearFeedback = false,
   }) {
     return ExerciseLogModel(
       exerciseId: exerciseId,
@@ -112,6 +121,7 @@ class ExerciseLogModel {
       repsPerSet: repsPerSet ?? this.repsPerSet,
       painNote: painNote ?? this.painNote,
       videoPath: videoPath ?? this.videoPath,
+      feedback: clearFeedback ? null : (feedback ?? this.feedback),
     );
   }
 }

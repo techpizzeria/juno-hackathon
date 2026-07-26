@@ -27,6 +27,8 @@ void main() {
               llmProvider: '',
               llmApiKey: '',
               llmModel: '',
+              geminiApiKey: '',
+              geminiModel: '',
               showDebugTools: false,
             ),
           ),

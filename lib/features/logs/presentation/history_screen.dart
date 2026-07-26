@@ -1,15 +1,13 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:video_player/video_player.dart';
 
 import 'package:flutter_template/features/logs/data/today.dart';
 import 'package:flutter_template/features/logs/domain/log_entry.dart';
 import 'package:flutter_template/features/logs/domain/streak.dart';
+import 'package:flutter_template/features/logs/presentation/form_feedback_dialog.dart';
+import 'package:flutter_template/features/logs/presentation/session_video_view.dart';
 import 'package:flutter_template/widgets/app_animations.dart';
 import 'package:flutter_template/widgets/app_scaffold.dart';
 
@@ -235,96 +233,21 @@ class _ExerciseDetail extends StatelessWidget {
             ),
           if (log?.videoPath != null && log!.videoPath!.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _VideoView(path: log.videoPath!),
+            SessionVideoView(path: log.videoPath!),
+          ],
+          if (log?.feedback != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: () =>
+                    showFormFeedback(context, log!.feedback!, name),
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: const Text('View form feedback'),
+              ),
+            ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-/// Inline player for a recorded form-check video.
-class _VideoView extends StatefulWidget {
-  const _VideoView({required this.path});
-
-  final String path;
-
-  @override
-  State<_VideoView> createState() => _VideoViewState();
-}
-
-class _VideoViewState extends State<_VideoView> {
-  VideoPlayerController? _controller;
-  var _missing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final file = File(widget.path);
-    if (!file.existsSync()) {
-      _missing = true;
-      return;
-    }
-    final controller = VideoPlayerController.file(file);
-    _controller = controller;
-    unawaited(
-      controller.initialize().then((_) {
-        if (mounted) setState(() {});
-      }).catchError((_) {
-        if (mounted) setState(() => _missing = true);
-      }),
-    );
-  }
-
-  @override
-  void dispose() {
-    unawaited(_controller?.dispose());
-    super.dispose();
-  }
-
-  void _toggle() {
-    final controller = _controller;
-    if (controller == null) return;
-    final playing = controller.value.isPlaying;
-    unawaited(playing ? controller.pause() : controller.play());
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    if (_missing) {
-      return Text(
-        '🎥 Video unavailable',
-        style: theme.textTheme.bodySmall,
-      );
-    }
-    final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) {
-      return const SizedBox(
-        height: 120,
-        child: Center(child: CircularProgressIndicator.adaptive()),
-      );
-    }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: GestureDetector(
-        onTap: _toggle,
-        child: AspectRatio(
-          aspectRatio: controller.value.aspectRatio,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              VideoPlayer(controller),
-              if (!controller.value.isPlaying)
-                Icon(
-                  Icons.play_circle_fill,
-                  size: 56,
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }

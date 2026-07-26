@@ -8,12 +8,14 @@ part of 'today.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Today's scheduled sessions, pending first.
+/// Today's trainable sessions (every program active today, reminders or
+/// not), pending first.
 
 @ProviderFor(todaysSessions)
 final todaysSessionsProvider = TodaysSessionsProvider._();
 
-/// Today's scheduled sessions, pending first.
+/// Today's trainable sessions (every program active today, reminders or
+/// not), pending first.
 
 final class TodaysSessionsProvider
     extends
@@ -23,7 +25,8 @@ final class TodaysSessionsProvider
           List<SessionView>
         >
     with $Provider<List<SessionView>> {
-  /// Today's scheduled sessions, pending first.
+  /// Today's trainable sessions (every program active today, reminders or
+  /// not), pending first.
   TodaysSessionsProvider._()
     : super(
         from: null,
@@ -58,7 +61,7 @@ final class TodaysSessionsProvider
   }
 }
 
-String _$todaysSessionsHash() => r'f48da89afbc1ecb8a57fe212cf0e5bf9f96e9ff5';
+String _$todaysSessionsHash() => r'37cdf31c51ff5e193173f38e349fe94f8afc9876';
 
 /// Current streak in days.
 

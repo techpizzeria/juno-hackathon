@@ -9,10 +9,14 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_template/features/exercise_catalog/data/exercise_catalog.dart';
 import 'package:flutter_template/features/exercise_catalog/domain/exercise.dart';
 import 'package:flutter_template/features/exercise_catalog/presentation/exercise_motion_image.dart';
+import 'package:flutter_template/features/logs/application/form_check_service.dart';
 import 'package:flutter_template/features/logs/application/video_service.dart';
 import 'package:flutter_template/features/logs/data/logs.dart';
+import 'package:flutter_template/features/logs/domain/form_feedback.dart';
 import 'package:flutter_template/features/logs/domain/log_entry.dart';
 import 'package:flutter_template/features/logs/domain/streak.dart';
+import 'package:flutter_template/features/logs/presentation/form_feedback_dialog.dart';
+import 'package:flutter_template/features/logs/presentation/session_video_view.dart';
 import 'package:flutter_template/features/programs/data/programs.dart';
 import 'package:flutter_template/features/programs/domain/program.dart';
 import 'package:flutter_template/features/schedule/application/notification_service.dart';
@@ -422,7 +426,9 @@ class _ExerciseAmendSheetState extends ConsumerState<_ExerciseAmendSheet> {
     text: widget.initial?.painNote,
   );
   late String? _videoPath = widget.initial?.videoPath;
+  late FormFeedbackModel? _feedback = widget.initial?.feedback;
   var _recording = false;
+  var _analyzing = false;
 
   List<int> _initialReps() {
     final existing = widget.initial?.repsPerSet;
@@ -450,9 +456,40 @@ class _ExerciseAmendSheetState extends ConsumerState<_ExerciseAmendSheet> {
         );
         return;
       }
-      setState(() => _videoPath = path);
+      // A fresh clip invalidates any feedback from the previous take.
+      setState(() {
+        _videoPath = path;
+        _feedback = null;
+      });
     } finally {
       if (mounted) setState(() => _recording = false);
+    }
+  }
+
+  Future<void> _analyze() async {
+    final service = ref.read(formCheckServiceProvider);
+    final videoPath = _videoPath;
+    if (service == null || videoPath == null || _analyzing) return;
+    setState(() => _analyzing = true);
+    try {
+      final feedback = await service.analyze(
+        videoPath: videoPath,
+        exerciseName: widget.exercise.name,
+        sets: widget.exercise.sets,
+        reps: widget.exercise.reps,
+        targetMuscles: widget.catalogEntry?.primaryMuscles ?? const [],
+        instructions: widget.catalogEntry?.instructions ?? const [],
+      );
+      if (!mounted) return;
+      setState(() => _feedback = feedback);
+      await showFormFeedback(context, feedback, widget.exercise.name);
+    } on FormCheckException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } finally {
+      if (mounted) setState(() => _analyzing = false);
     }
   }
 
@@ -466,6 +503,7 @@ class _ExerciseAmendSheetState extends ConsumerState<_ExerciseAmendSheet> {
         repsPerSet: [..._reps],
         painNote: comment.isEmpty ? null : comment,
         videoPath: _videoPath,
+        feedback: _feedback,
       ),
     );
   }
@@ -607,9 +645,12 @@ class _ExerciseAmendSheetState extends ConsumerState<_ExerciseAmendSheet> {
   }
 
   /// Prominent form-check video section.
+  ///
+  /// Before recording, shows a single record button. After recording, shows
+  /// the clip inline (tap to replay) with a retake button beneath it.
   Widget _buildVideoSection(BuildContext context) {
     final theme = Theme.of(context);
-    final hasVideo = _videoPath != null;
+    final videoPath = _videoPath;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -622,26 +663,73 @@ class _ExerciseAmendSheetState extends ConsumerState<_ExerciseAmendSheet> {
           ),
         ),
         const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: _recording ? null : _record,
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            side: BorderSide(
-              color: hasVideo
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.outline,
+        if (videoPath == null)
+          OutlinedButton.icon(
+            onPressed: _recording ? null : _record,
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            icon: const Icon(Icons.videocam_outlined),
+            label: Text(_recording ? 'Opening camera…' : 'Record a video'),
+          )
+        else ...[
+          SessionVideoView(path: videoPath),
+          const SizedBox(height: 4),
+          Text(
+            'Tap the video to replay.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          icon: Icon(hasVideo ? Icons.check_circle : Icons.videocam_outlined),
-          label: Text(
-            _recording
-                ? 'Opening camera…'
-                : hasVideo
-                ? 'Video recorded (tap to retake)'
-                : 'Record a video',
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              OutlinedButton.icon(
+                onPressed: _recording ? null : _record,
+                icon: const Icon(Icons.videocam_outlined),
+                label: Text(_recording ? 'Opening camera…' : 'Retake'),
+              ),
+              const SizedBox(width: 8),
+              _buildAnalyzeAction(context),
+            ],
           ),
-        ),
+        ],
       ],
+    );
+  }
+
+  /// The analyse / view-feedback action shown beside Retake.
+  ///
+  /// Hidden when no form-check service is configured. Turns into a compact
+  /// "View feedback" button once analysis has produced a result.
+  Widget _buildAnalyzeAction(BuildContext context) {
+    if (ref.read(formCheckServiceProvider) == null) {
+      return const SizedBox.shrink();
+    }
+    final feedback = _feedback;
+    if (feedback != null) {
+      return OutlinedButton.icon(
+        onPressed: () =>
+            showFormFeedback(context, feedback, widget.exercise.name),
+        icon: const Icon(Icons.auto_awesome, size: 18),
+        label: const Text('View feedback'),
+      );
+    }
+    if (_analyzing) {
+      return OutlinedButton.icon(
+        onPressed: null,
+        icon: const SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+        label: const Text('Analysing…'),
+      );
+    }
+    return FilledButton.tonalIcon(
+      onPressed: _analyze,
+      icon: const Icon(Icons.auto_awesome, size: 18),
+      label: const Text('Analyse form'),
     );
   }
 }

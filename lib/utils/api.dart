@@ -8,7 +8,15 @@ enum ApiPath {
   anthropicMessages('https://api.anthropic.com/v1/messages'),
 
   /// OpenAI chat completions API (absolute URL, bypasses the dio base URL).
-  openAiChatCompletions('https://api.openai.com/v1/chat/completions');
+  openAiChatCompletions('https://api.openai.com/v1/chat/completions'),
+
+  /// Gemini Files API resumable-upload entry point (absolute URL). Used to
+  /// upload a form-check video before analysis.
+  geminiFilesUpload('https://generativelanguage.googleapis.com/upload/v1beta/files'),
+
+  /// Gemini API base (absolute URL). The form-check service builds the
+  /// per-model `:generateContent` path and file-status polls from this.
+  geminiApiBase('https://generativelanguage.googleapis.com/v1beta');
 
   const ApiPath(this.path);
 

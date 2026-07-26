@@ -12,6 +12,8 @@ class AppConfig {
     required this.llmProvider,
     required this.llmApiKey,
     required this.llmModel,
+    required this.geminiApiKey,
+    required this.geminiModel,
     required this.showDebugTools,
     this.requestTimeout = const Duration(seconds: 15),
   });
@@ -31,11 +33,21 @@ class AppConfig {
   /// Model override; each provider implementation supplies a default.
   final String llmModel;
 
+  /// Google Gemini API key for AI form-check video analysis. Empty disables
+  /// the form-check feature.
+  final String geminiApiKey;
+
+  /// Gemini model override for form check; the service supplies a default.
+  final String geminiModel;
+
   /// Whether developer helpers (e.g. test-notification button) are shown.
   final bool showDebugTools;
 
   /// Whether AI program creation is available in this build.
   bool get llmEnabled => llmProvider.isNotEmpty && llmApiKey.isNotEmpty;
+
+  /// Whether AI form-check video analysis is available in this build.
+  bool get formCheckEnabled => geminiApiKey.isNotEmpty;
 
   /// Builds the config for the current build.
   ///
@@ -59,6 +71,14 @@ class AppConfig {
         const String.fromEnvironment('LLM_API_KEY'),
       ),
       llmModel: _envOr('LLM_MODEL', const String.fromEnvironment('LLM_MODEL')),
+      geminiApiKey: _envOr(
+        'GEMINI_API_KEY',
+        const String.fromEnvironment('GEMINI_API_KEY'),
+      ),
+      geminiModel: _envOr(
+        'GEMINI_MODEL',
+        const String.fromEnvironment('GEMINI_MODEL'),
+      ),
       showDebugTools: const bool.fromEnvironment('SHOW_DEBUG_TOOLS'),
     );
   }

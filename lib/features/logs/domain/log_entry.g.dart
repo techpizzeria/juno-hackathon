@@ -15,6 +15,11 @@ ExerciseLogModel _$ExerciseLogModelFromJson(Map<String, dynamic> json) =>
           .toList(),
       painNote: json['painNote'] as String?,
       videoPath: json['videoPath'] as String?,
+      feedback: json['feedback'] == null
+          ? null
+          : FormFeedbackModel.fromJson(
+              json['feedback'] as Map<String, dynamic>,
+            ),
     );
 
 Map<String, dynamic> _$ExerciseLogModelToJson(ExerciseLogModel instance) =>
@@ -24,6 +29,7 @@ Map<String, dynamic> _$ExerciseLogModelToJson(ExerciseLogModel instance) =>
       'repsPerSet': instance.repsPerSet,
       'painNote': instance.painNote,
       'videoPath': instance.videoPath,
+      'feedback': instance.feedback?.toJson(),
     };
 
 const _$ExerciseLogStatusEnumMap = {
