@@ -103,6 +103,7 @@ class _ProgramEditScreenState extends ConsumerState<ProgramEditScreen> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _ExerciseEditSheet(initial: exercise),
     );
     if (result == null || !mounted) return;

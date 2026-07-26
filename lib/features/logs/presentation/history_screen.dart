@@ -130,6 +130,7 @@ class _EntryRow extends StatelessWidget {
         context: context,
         showDragHandle: true,
         isScrollControlled: true,
+        useSafeArea: true,
         builder: (_) => _EntryDetailSheet(entry: entry),
       ),
     );
@@ -233,7 +234,7 @@ class _ExerciseDetail extends StatelessWidget {
             ),
           if (log?.videoPath != null && log!.videoPath!.isNotEmpty) ...[
             const SizedBox(height: 8),
-            SessionVideoView(path: log.videoPath!),
+            SessionVideoView(path: log.videoPath!, maxHeight: 140),
           ],
           if (log?.feedback != null) ...[
             const SizedBox(height: 8),

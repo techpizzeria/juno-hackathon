@@ -60,6 +60,7 @@ class _ExercisePickerScreenState extends ConsumerState<ExercisePickerScreen> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _ExerciseDetailSheet(exercise: exercise),
     );
     if ((added ?? false) && mounted) {

@@ -253,6 +253,7 @@ class _ExerciseLogCard extends StatelessWidget {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _ExerciseAmendSheet(
         exercise: exercise,
         catalogEntry: catalogEntry,
@@ -267,6 +268,7 @@ class _ExerciseLogCard extends StatelessWidget {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) =>
           _ExerciseInspectSheet(exercise: exercise, catalogEntry: catalogEntry),
     );
@@ -690,7 +692,7 @@ class _ExerciseAmendSheetState extends ConsumerState<_ExerciseAmendSheet> {
                 label: Text(_recording ? 'Opening camera…' : 'Retake'),
               ),
               const SizedBox(width: 8),
-              _buildAnalyzeAction(context),
+              Expanded(child: _buildAnalyzeAction(context)),
             ],
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:flutter_template/features/programs/data/programs.dart';
 import 'package:flutter_template/features/programs/domain/program.dart';
@@ -73,13 +74,7 @@ class ProgramListScreen extends ConsumerWidget {
         ),
       ],
       body: programs.isEmpty
-          ? Center(
-              child: Text(
-                'No programs yet.\nTap + to create one.',
-                style: textTheme.bodyLarge,
-                textAlign: TextAlign.center,
-              ),
-            )
+          ? const _EmptyPrograms()
           : ListView(
               children: AppAnimate.staggered(
                 context,
@@ -118,6 +113,60 @@ class ProgramListScreen extends ConsumerWidget {
                 ],
               ),
             ),
+    );
+  }
+}
+
+/// Empty state: a centered prompt with a hand-drawn doodle arrow pointing up
+/// at the "+" action in the app bar, so the way to add a program is obvious.
+class _EmptyPrograms extends StatelessWidget {
+  const _EmptyPrograms();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'No programs yet',
+                  style: theme.textTheme.headlineSmall,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Create your first program to get started.',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Doodle arrow just under the app bar, its tip aimed at the "+".
+        Positioned(
+          top: 0,
+          right: 8,
+          child: IgnorePointer(
+            child: SvgPicture.asset(
+              'assets/doodles/arrow_add.svg',
+              width: 110,
+              colorFilter: ColorFilter.mode(
+                theme.colorScheme.primary,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
