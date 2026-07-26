@@ -590,7 +590,7 @@ class _ExerciseAmendSheetState extends ConsumerState<_ExerciseAmendSheet> {
               SizedBox(
                 width: 72,
                 height: 72,
-                child: ExerciseMotionImage(exercise: entry),
+                child: ExerciseMotionImage(exercise: entry, animate: true),
               ),
               const SizedBox(width: 12),
             ],
@@ -772,7 +772,7 @@ class _ExerciseInspectSheet extends StatelessWidget {
           if (entry != null) ...[
             SizedBox(
               height: 180,
-              child: ExerciseMotionImage(exercise: entry),
+              child: ExerciseMotionImage(exercise: entry, animate: true),
             ),
             const SizedBox(height: 16),
           ],

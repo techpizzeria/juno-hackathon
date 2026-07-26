@@ -15,6 +15,8 @@ import 'package:flutter_template/config/config_provider.dart';
 import 'package:flutter_template/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:flutter_template/features/logs/data/logs.dart';
 import 'package:flutter_template/features/logs/presentation/today_log_screen.dart';
+import 'package:flutter_template/features/onboarding/data/onboarding_repository.dart';
+import 'package:flutter_template/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:flutter_template/features/programs/data/programs.dart';
 import 'package:flutter_template/features/schedule/application/notification_service.dart';
 import 'package:flutter_template/theme/app_theme.dart';
@@ -70,11 +72,13 @@ Future<void> main() async {
 
   await notificationService.init();
   final launchProgramId = await notificationService.launchPayloadProgramId();
+  final introSeen =
+      container.read(onboardingRepositoryProvider).hasCompletedIntro();
 
   runApp(
     UncontrolledProviderScope(
       container: container,
-      child: const CreakApp(),
+      child: CreakApp(introSeen: introSeen),
     ),
   );
   FlutterNativeSplash.remove();
@@ -125,7 +129,11 @@ Future<void> _logProgramToday(
 /// Installs the peach-coral Material 3 themes (system-driven light/dark) and
 /// the [rootNavigatorKey] used by notification handlers to deep-open screens.
 class CreakApp extends StatelessWidget {
-  const CreakApp({super.key});
+  const CreakApp({required this.introSeen, super.key});
+
+  /// Whether the first-run intro has already been shown. When false the app
+  /// opens on the welcome screen instead of the dashboard.
+  final bool introSeen;
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +142,7 @@ class CreakApp extends StatelessWidget {
       navigatorKey: rootNavigatorKey,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      home: const DashboardScreen(),
+      home: introSeen ? const DashboardScreen() : const OnboardingScreen(),
     );
   }
 }

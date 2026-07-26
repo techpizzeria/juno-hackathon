@@ -240,7 +240,10 @@ class _ExerciseDetailSheet extends StatelessWidget {
                 children: [
                   SizedBox(
                     height: 180,
-                    child: ExerciseMotionImage(exercise: exercise),
+                    child: ExerciseMotionImage(
+                      exercise: exercise,
+                      animate: true,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(exercise.name, style: theme.textTheme.headlineSmall),

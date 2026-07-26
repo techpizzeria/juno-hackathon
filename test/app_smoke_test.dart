@@ -34,7 +34,7 @@ void main() {
           ),
           localStorageProvider.overrideWithValue(prefs),
         ],
-        child: const CreakApp(),
+        child: const CreakApp(introSeen: true),
       ),
     );
     await tester.pump();
