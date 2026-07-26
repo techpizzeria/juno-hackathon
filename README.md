@@ -7,13 +7,7 @@ physio exercises, with a little cloud named Creaky cheering them on.
 
 ## Project summary
 
-Most people leave a physio appointment with a set of exercises and quietly stop
-doing them within a week. Recovery stalls, and appointments go to waste. Creak
-turns that lonely, easy-to-skip routine into a small daily habit.
-
-You build a plan, get gentle reminders, log each session, and keep a streak
-going. Creaky, the cloud mascot, reacts to how your week is going, so the app
-feels like a companion rather than a checklist.
+Creak is an always-on physio coach helping patients manage rehabilitation with clear, personalised exercise programmes and consistent support between appointments. Its goal is to help patients recover confidently while enabling physiotherapists to deliver efficient, responsive care.
 
 What it does:
 
